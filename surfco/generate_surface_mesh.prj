@@ -1,0 +1,238 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration file="C:\Users\arthu\Desktop\surfco\Examples\generate_surface_mesh.prj" location="C:\Users\arthu\Desktop\surfco\Examples" name="generate_surface_mesh" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>generate_surface_mesh</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>1.0</param.version>
+    <param.authnamewatermark />
+    <param.email />
+    <param.company />
+    <param.summary />
+    <param.description />
+    <param.screenshot />
+    <param.guid />
+    <param.installpath.string>\generate_surface_mesh\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo />
+    <param.install.notes />
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\generate_surface_mesh\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\generate_surface_mesh\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\generate_surface_mesh\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\generate_surface_mesh</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text>Syntax 
+	  -? 
+	 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 input arguments</param.help.text>
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.version />
+      <param.authnamewatermark />
+      <param.email />
+      <param.company />
+      <param.summary />
+      <param.description />
+      <param.screenshot />
+      <param.guid />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.logo />
+      <param.install.notes />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\Example_1.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>C:\Program Files\MATLAB\MATLAB Runtime</file>
+      <file>${PROJECT_ROOT}\@polyline</file>
+      <file>${PROJECT_ROOT}\_config.yml</file>
+      <file>${PROJECT_ROOT}\CommonCxxTests.lib</file>
+      <file>${PROJECT_ROOT}\distance2Plane.m</file>
+      <file>${PROJECT_ROOT}\enableVTK.m</file>
+      <file>${PROJECT_ROOT}\FarthestPointSampling.m</file>
+      <file>${PROJECT_ROOT}\fro2.m</file>
+      <file>${PROJECT_ROOT}\getLids.m</file>
+      <file>${PROJECT_ROOT}\getLinespec.m</file>
+      <file>${PROJECT_ROOT}\getPlane.m</file>
+      <file>${PROJECT_ROOT}\hplotMESH.m</file>
+      <file>${PROJECT_ROOT}\InterpolatingSplines.m</file>
+      <file>${PROJECT_ROOT}\ipd.m</file>
+      <file>${PROJECT_ROOT}\license.txt</file>
+      <file>${PROJECT_ROOT}\LSDyna.dll</file>
+      <file>${PROJECT_ROOT}\LSDyna.lib</file>
+      <file>${PROJECT_ROOT}\MakeMesh.m</file>
+      <file>${PROJECT_ROOT}\maketransform.m</file>
+      <file>${PROJECT_ROOT}\MapReduceMPI.dll</file>
+      <file>${PROJECT_ROOT}\MapReduceMPI.lib</file>
+      <file>${PROJECT_ROOT}\MatchPoints.m</file>
+      <file>${PROJECT_ROOT}\meshCelltype.m</file>
+      <file>${PROJECT_ROOT}\MeshFakeButterfly.m</file>
+      <file>${PROJECT_ROOT}\meshQuality.m</file>
+      <file>${PROJECT_ROOT}\meshSlice.m</file>
+      <file>${PROJECT_ROOT}\MeshSmooth.m</file>
+      <file>${PROJECT_ROOT}\MeshSubdivide.m</file>
+      <file>${PROJECT_ROOT}\MeshTidy.m</file>
+      <file>${PROJECT_ROOT}\minInd.m</file>
+      <file>${PROJECT_ROOT}\mpistubs.dll</file>
+      <file>${PROJECT_ROOT}\mpistubs.lib</file>
+      <file>${PROJECT_ROOT}\noinfs.m</file>
+      <file>${PROJECT_ROOT}\nonans.m</file>
+      <file>${PROJECT_ROOT}\parameters.json</file>
+      <file>${PROJECT_ROOT}\parseargs.m</file>
+      <file>${PROJECT_ROOT}\parseargs.mexa64</file>
+      <file>${PROJECT_ROOT}\parseargs.mexw64</file>
+      <file>${PROJECT_ROOT}\plotMESH.m</file>
+      <file>${PROJECT_ROOT}\pol.m</file>
+      <file>${PROJECT_ROOT}\ppinv.m</file>
+      <file>${PROJECT_ROOT}\SliceMesh.m</file>
+      <file>${PROJECT_ROOT}\stlwrite.m</file>
+      <file>${PROJECT_ROOT}\surf2solid.m</file>
+      <file>${PROJECT_ROOT}\SurfaceIntersection.m</file>
+      <file>${PROJECT_ROOT}\SurfaceIntersection_tutorial.m</file>
+      <file>${PROJECT_ROOT}\SurFCo.m</file>
+      <file>${PROJECT_ROOT}\TidyMesh.m</file>
+      <file>${PROJECT_ROOT}\transform.m</file>
+      <file>${PROJECT_ROOT}\vec.m</file>
+      <file>${PROJECT_ROOT}\vtkalglib.dll</file>
+      <file>${PROJECT_ROOT}\vtkalglib.lib</file>
+      <file>${PROJECT_ROOT}\vtkButterflySubdivisionFilter.mexw64</file>
+      <file>${PROJECT_ROOT}\vtkClosestElement.mexw64</file>
+      <file>${PROJECT_ROOT}\vtkCommon.dll</file>
+      <file>${PROJECT_ROOT}\vtkCommon.lib</file>
+      <file>${PROJECT_ROOT}\vtkDICOMParser.dll</file>
+      <file>${PROJECT_ROOT}\vtkDICOMParser.lib</file>
+      <file>${PROJECT_ROOT}\vtkexoIIc.dll</file>
+      <file>${PROJECT_ROOT}\vtkexoIIc.lib</file>
+      <file>${PROJECT_ROOT}\vtkexpat.dll</file>
+      <file>${PROJECT_ROOT}\vtkexpat.lib</file>
+      <file>${PROJECT_ROOT}\vtkFiltering.dll</file>
+      <file>${PROJECT_ROOT}\vtkFiltering.lib</file>
+      <file>${PROJECT_ROOT}\vtkfreetype.dll</file>
+      <file>${PROJECT_ROOT}\vtkfreetype.lib</file>
+      <file>${PROJECT_ROOT}\vtkftgl.dll</file>
+      <file>${PROJECT_ROOT}\vtkftgl.lib</file>
+      <file>${PROJECT_ROOT}\vtkGenericFiltering.dll</file>
+      <file>${PROJECT_ROOT}\vtkGenericFiltering.lib</file>
+      <file>${PROJECT_ROOT}\vtkGraphics.dll</file>
+      <file>${PROJECT_ROOT}\vtkGraphics.lib</file>
+      <file>${PROJECT_ROOT}\vtkhdf5.dll</file>
+      <file>${PROJECT_ROOT}\vtkhdf5.lib</file>
+      <file>${PROJECT_ROOT}\vtkhdf5_hl.dll</file>
+      <file>${PROJECT_ROOT}\vtkhdf5_hl.lib</file>
+      <file>${PROJECT_ROOT}\vtkHybrid.dll</file>
+      <file>${PROJECT_ROOT}\vtkHybrid.lib</file>
+      <file>${PROJECT_ROOT}\vtkImaging.dll</file>
+      <file>${PROJECT_ROOT}\vtkImaging.lib</file>
+      <file>${PROJECT_ROOT}\vtkIO.dll</file>
+      <file>${PROJECT_ROOT}\vtkIO.lib</file>
+      <file>${PROJECT_ROOT}\vtkjpeg.dll</file>
+      <file>${PROJECT_ROOT}\vtkjpeg.lib</file>
+      <file>${PROJECT_ROOT}\vtklibxml2.dll</file>
+      <file>${PROJECT_ROOT}\vtklibxml2.lib</file>
+      <file>${PROJECT_ROOT}\vtkLoopSubdivisionFilter.mexw64</file>
+      <file>${PROJECT_ROOT}\vtkmetaio.dll</file>
+      <file>${PROJECT_ROOT}\vtkmetaio.lib</file>
+      <file>${PROJECT_ROOT}\vtkmyCommon.dll</file>
+      <file>${PROJECT_ROOT}\vtkmyCommon.lib</file>
+      <file>${PROJECT_ROOT}\vtkmyImaging.dll</file>
+      <file>${PROJECT_ROOT}\vtkmyImaging.lib</file>
+      <file>${PROJECT_ROOT}\vtkmyUnsorted.dll</file>
+      <file>${PROJECT_ROOT}\vtkmyUnsorted.lib</file>
+      <file>${PROJECT_ROOT}\vtkNetCDF.dll</file>
+      <file>${PROJECT_ROOT}\vtkNetCDF.lib</file>
+      <file>${PROJECT_ROOT}\vtkNetCDF_cxx.dll</file>
+      <file>${PROJECT_ROOT}\vtkNetCDF_cxx.lib</file>
+      <file>${PROJECT_ROOT}\vtkpng.dll</file>
+      <file>${PROJECT_ROOT}\vtkpng.lib</file>
+      <file>${PROJECT_ROOT}\vtkPolyDataReader.mexw64</file>
+      <file>${PROJECT_ROOT}\vtkproj4.dll</file>
+      <file>${PROJECT_ROOT}\vtkproj4.lib</file>
+      <file>${PROJECT_ROOT}\vtkQuadricDecimation.mexw64</file>
+      <file>${PROJECT_ROOT}\vtkRendering.dll</file>
+      <file>${PROJECT_ROOT}\vtkRendering.lib</file>
+      <file>${PROJECT_ROOT}\vtkSmoothPolyDataFilter.mexw64</file>
+      <file>${PROJECT_ROOT}\vtksqlite.lib</file>
+      <file>${PROJECT_ROOT}\vtksys.dll</file>
+      <file>${PROJECT_ROOT}\vtksys.lib</file>
+      <file>${PROJECT_ROOT}\vtktiff.dll</file>
+      <file>${PROJECT_ROOT}\vtktiff.lib</file>
+      <file>${PROJECT_ROOT}\vtkverdict.dll</file>
+      <file>${PROJECT_ROOT}\vtkverdict.lib</file>
+      <file>${PROJECT_ROOT}\vtkVolumeRendering.dll</file>
+      <file>${PROJECT_ROOT}\vtkVolumeRendering.lib</file>
+      <file>${PROJECT_ROOT}\vtkWidgets.dll</file>
+      <file>${PROJECT_ROOT}\vtkWidgets.lib</file>
+      <file>${PROJECT_ROOT}\vtkzlib.dll</file>
+      <file>${PROJECT_ROOT}\vtkzlib.lib</file>
+    </fileset.resources>
+    <fileset.package />
+    <fileset.depfun>
+      <file>${MATLAB_ROOT}\toolbox\matlab\demos\tetmesh.mat</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\generate_surface_mesh\for_testing" name="readme.txt" optional="true">C:\Users\arthu\Desktop\surfco\Examples\generate_surface_mesh\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\generate_surface_mesh\for_testing" name="generate_surface_mesh.exe" optional="false">C:\Users\arthu\Desktop\surfco\Examples\generate_surface_mesh\for_testing\generate_surface_mesh.exe</file>
+      <file location="${PROJECT_ROOT}\generate_surface_mesh\for_testing" name="splash.png" optional="false">C:\Users\arthu\Desktop\surfco\Examples\generate_surface_mesh\for_testing\splash.png</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2021a</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
