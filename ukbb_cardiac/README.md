@@ -10,35 +10,6 @@
 
 **Note** This repository only contains the code, not the imaging data. To know more about how to access the UK Biobank imaging data, please go to the [UK Biobank Imaging Study](http://imaging.ukbiobank.ac.uk/) website. Researchers can [apply](http://www.ukbiobank.ac.uk/register-apply/) to use the UK Biobank data resource for health-related research in the public interest.
 
-## Installation
-
-The toolbox is developed using [Python](https://www.python.org) programming language. Python is usually installed by default on Linux and OSX machines but may need to be installed on Windows machines. Regarding the Python version, I use Python 3. But Python 2 may also work, since I have not used any function specific for Python 3.
-
-The toolbox depends on some external libraries which need to be installed, including:
-
-* tensorflow for deep learning;
-* numpy and scipy for numerical computation;
-* matplotlib, seaborn for data visulisation;
-* pandas and python-dateutil for handling spreadsheet;
-* pydicom, SimpleITK for handling dicom images
-* nibabel for reading and writing nifti images;
-* sciki-image, opencv-python for transforming images in data augmentation;
-* vtk for mesh manipulation.
-
-The most convenient way to install these libraries is to use pip3 (or pip for Python 2) by running this command in the terminal:
-```
-pip3 install tensorflow-gpu numpy scipy matplotlib seaborn pandas python-dateutil pydicom SimpleITK nibabel scikit-image opencv-python vtk
-```
-
-The toolbox also evaluates cardiac strain on short-axis and long-axis images. To enable strain calculation, [MIRTK](https://github.com/BioMedIA/MIRTK) needs to be installed. MIRTK is a medical image registration toolbox, which is used for performing cardiac motion tracking on short-axis and long-axis images. However, MIRTK is not a mandatory option for using this toolbox. Without MIRTK, the toolbox will still evaluate most of the cardiac imaging phenotypes, other than strains.
-
-## Usage
-
-**A quick demo** First, please add the github repository directory to your $PYTHONPATH environment, so that the ukbb_cardiac module can be imported and cross-referenced in its code. If you are using Linux, you can run this command:
-```
-export PYTHONPATH=YOUR_GIT_REPOSITORY_PATH:"${PYTHONPATH}" 
-```
-
 To try the demo on the example images, simply run this command:
 ```
 python3 demo_pipeline.py
