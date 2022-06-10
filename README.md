@@ -14,7 +14,8 @@
 ## Preparations
 1. Download the [stable release](https://github.com/ziyuanli17/CardioFree/releases) and extract the ziped file
 2. Run **GUI.exe** (Currently only support Windows machine)
- **NOTE**: the input folder contains two example dicom files. example1: segmentation works using mUNet only.example2: mUnet outlier, EF required. If you are using your own file(s), make sure they match the examples' file type and dimensions (2D images + time series + slices along z)
+
+**NOTE**: the input folder contains two example dicom files. example1: segmentation works using mUNet only.example2: mUnet outlier, EF required. If you are using your own file(s), make sure they match the examples' file type and dimensions (2D images + time series + slices along z)
 3. Wait until the mUnet segmentation finishes and the results are displayed
 **NOTE**: All outputs will be saved in the **Output folder**
 
