@@ -100,7 +100,12 @@ function M = SurFCo( C , varargin )
   
   
   d = fullfile( fileparts(which('SurFCo')));
-
+  fileName = 'mesh_parameters.json'; % filename in JSON extension
+  fid = fopen(fileName); % Opening the file
+  raw = fread(fid,inf); % Reading the contents
+  str = char(raw'); % Transformation
+  fclose(fid); % Closing the file
+  parameters = jsondecode(str); % Using the jsondecode function to parse JSON from string
 
   enableVTK                             ;        
   FARTERPOINTS         = []             ;  %number of points to use ( As Neg: breaking distance between points)
@@ -108,10 +113,11 @@ function M = SurFCo( C , varargin )
   SMTHDEC_ITER         = []             ;  %number of Smoothing + Decimation iteration 
   bLID                 = NaN            ;  %bottom LID
   uLID                 = NaN            ;  %upper LID
-  RESOLUTION           = 50             ;  %number of angular partitions in initial mesh
-  TARGETREDUCTION      = 0.72            ;  %reduction at decimation step
-  MAX_DEFORMATION_ITS  = 200            ;  %Number of Deformation Iterations
-  PERCENTAGE           = 0.03            ;  %percentage of pushing force
+  RESOLUTION           = 180             ;  %number of angular partitions in initial mesh
+  
+  TARGETREDUCTION      = 0.72/2         ;  %reduction at decimation step
+  MAX_DEFORMATION_ITS  = 150            ;  %Number of Deformation Iterations
+  PERCENTAGE           = 0.1            ;  %percentage of pushing force
   VPLOT                = false          ;
   GETLIDS              = true           ;
   DEFORM               = true           ;
@@ -123,9 +129,15 @@ function M = SurFCo( C , varargin )
                                            %  {'FakeButterfly',100}  perform linear + smooth_100 + TPS
   EAP                  = []             ;
   SMOOTH_STRENGTH      = 200            ;
-  SMOOTH_LAMBDA        = 0.1            ;
+  SMOOTH_LAMBDA        = 0.5            ;
   SMOOTH_ALG           = 'vtk';  % 'vtk'  'cotan'   'uniform'   'cotan2' (Peyre Implementation)   {'cotan','implicit'}   {'uniform','explicit'}
   
+  RESOLUTION = parameters.RESOLUTION(1);
+  TARGETREDUCTION = parameters.TARGETREDUCTION(1);
+  MAX_DEFORMATION_ITS = parameters.MAX_DEFORMATION_ITS(1);
+  PERCENTAGE = parameters.PERCENTAGE(1);
+  SMOOTH_STRENGTH = parameters.SMOOTH_STRENGTH(1);
+  SMOOTH_LAMBDA = parameters.SMOOTH_LAMBDA(1);
   
   
   [varargin,VPLOT]  = parseargs(varargin,'plot'    ,'$FORCE$',{true,VPLOT})  ;
@@ -150,7 +162,7 @@ function M = SurFCo( C , varargin )
   [varargin,~,SMOOTH_LAMBDA       ]  = parseargs(varargin,'SMOOTH_LAMBDA'                       ,'$DEFS$',SMOOTH_LAMBDA       );
   [varargin,~,SMOOTH_ALG          ]  = parseargs(varargin,'SMOOTH_ALG'                          ,'$DEFS$',SMOOTH_ALG          );
  
- 
+
   %% remove empties
   C( all( cellfun( 'isempty' , C ) ,2) ,:) = [];
   

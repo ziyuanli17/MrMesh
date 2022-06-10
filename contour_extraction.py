@@ -298,10 +298,13 @@ def extract_contour(SA_LV_mask_ED, SA_img_ED, slice_locs_trimed, folder):
         tiff2.append(reconstructed)
         np.clip(reconstructed, 0, 255, out=reconstructed)
         reconstructed = reconstructed.astype('uint8')
+
+
         _, _, _, centroids = cv2.connectedComponentsWithStats(reconstructed, None, None, None, 4, cv2.CV_32S)
 
         LV, RV, MY, full = apply_mask(SA_img_ED[i], reconstructed)
         full_arr.append(full)
+
         # cv2_imshow(reconstructed)
         # cv2_imshow(full)
         myo_solid = reconstructed.copy()
@@ -331,3 +334,35 @@ def extract_contour(SA_LV_mask_ED, SA_img_ED, slice_locs_trimed, folder):
 
     save_xzys(xyz_array_myo, folder, "Myo_point_cloud.xyz")
     save_xzys(xyz_array_lv, folder, "LV_point_cloud.xyz")
+
+# import nibabel as nib
+# def load_nii(img_path):
+#     nimg = nib.load(img_path)
+#     return nimg.get_fdata(), nimg.affine, nimg.header
+#
+#
+# slice_locs = [-20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200]
+#
+# name = "seg"
+# masks_SA, _, _ = load_nii(name+".nii.gz")
+# imgs_SA, _, _ = load_nii("img.nii.gz")
+# nn_mask_LV = masks_SA.copy()
+# if name == "gt":
+#     nn_mask_LV[nn_mask_LV == 2] = 255  # Myo
+#     nn_mask_LV[nn_mask_LV == 3] = 60  # RV
+#     nn_mask_LV[nn_mask_LV == 1] = 0  # LV
+#     np.clip(nn_mask_LV, 0, 255, out=nn_mask_LV)
+# elif name == "seg":
+#     nn_mask_LV[nn_mask_LV == 2] = 255  # Myo
+#     nn_mask_LV[nn_mask_LV == 3] = 0  # RV
+#     nn_mask_LV[nn_mask_LV == 1] = 60  # LV
+# nn_mask_LV[nn_mask_LV < 60] = 0
+# nn_mask_LV[nn_mask_LV > 60] = 255
+#
+# img = []
+# seg = []
+# for i in range(np.shape(nn_mask_LV)[2]):
+#     img.append(imgs_SA[:, :, i])
+#     seg.append(nn_mask_LV[:, :, i])
+#
+# extract_contour(seg, img, slice_locs[1:len(seg)+1], name+"/")

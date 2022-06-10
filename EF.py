@@ -12,7 +12,9 @@ import os
 import nibabel as nib
 from PIL import Image, ImageFilter
 import json
+import string
 from contour_extraction import extract_contour
+from PIL import Image
 
 print("Copyright (c) 2022 Silva Lab")
 print("All Rights Reserved")
@@ -48,8 +50,7 @@ start_idx = Loc_idx
 end_idx = Loc_idx
 
 """# Load images and masks"""
-slice_locs = [-25.2, -15.6, -6.0, 3.6, 13.2, 22.8, 32.4, 42.0, 51.6, 61.2, 70.8, 80.8, 90.8, 100.8, 110.8, 120.8, 130.8,
-              140.8, 150.8, 160.8]
+slice_locs = parameter_dict["slice_locs"]
 
 
 # Utils function to load and save nifti files with the nibabel package
@@ -233,12 +234,13 @@ def reject_outliers(data, m):
 
 
 def save_gif(ds_sa_ed_img, output_folder):
+    ds_sa_ed_img = np.array(ds_sa_ed_img)
     for i in range(np.shape(ds_sa_ed_img)[0]):
         img = ds_sa_ed_img[i, :, :].astype('uint16')
         if np.max(img) != 0:
             img = ((img / np.max(img)) * 255).astype('uint16')
         im = Image.fromarray(img)
-        im.save(output_folder + str(i + 1) + ".gif")
+        im.save(output_folder + str(string.ascii_lowercase[i]) + ".gif")
 
 
 def save_dicom(img_arrays, output_folder, output_name):
@@ -248,10 +250,76 @@ def save_dicom(img_arrays, output_folder, output_name):
     nib.save(new_image, output_folder + output_name)
 
 
+def delete_all_files(path):
+    for f in os.listdir(path):
+        os.remove(os.path.join(path, f))
+
+
+def save_img(img, name):
+    try:
+        os.mkdir("ef_process")
+    except FileExistsError:
+        pass
+
+    im = Image.fromarray(img)
+    im.save("ef_process/" + name + ".gif")
+
+
+def format_img(img, to_gray=True):
+    np.clip(img, 0, 255, out=img)
+    img = img.astype('uint8')
+    if to_gray:
+        try:
+            img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        except:
+            pass
+    else:
+        try:
+            img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+        except:
+            pass
+    return img
+
+
+def edge_detection(img, seg):
+    img = format_img(img, False)
+    seg = format_img(seg)
+
+    seg_myo = seg.copy()
+    seg_myo[seg_myo != 0] = 255
+    seg_lv = seg.copy()
+    seg_lv[seg_lv == 255] = 0
+    seg_lv[seg_lv != 0] = 255
+
+    i = 0
+    for s in [seg_myo, seg_lv]:
+        # Blur the image for better edge detection
+        img_blur = cv.GaussianBlur(s, (5, 5), 0)
+        # Canny Edge Detection
+        edges = cv.Canny(image=img_blur, threshold1=0, threshold2=0)  # Canny Edge Detection
+
+        contours, h = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+
+        big_contour = max(contours, key=cv.contourArea)
+        M = cv.moments(big_contour)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+
+        cv.drawContours(img, contours, -1, (0, 0 + i, 255 - i), thickness=1, lineType=cv.LINE_AA)
+        i += 255
+
+    # Display Canny Edge Detection Image
+    return img
+
+
 """# **LV and Myo Segmentation**"""
 
 
 def run_ef_segmentation():
+    try:
+        delete_all_files("ef_process")
+    except:
+        pass
     # Load parameters
     parameter_dict = json.loads(open('parameters.json', 'r').read())
     """# **Software Parameters**"""
@@ -336,11 +404,15 @@ def run_ef_segmentation():
         # cv2_imshow(filtered_img_LV)
         filtered_img_MYO = bandpass_filter(img.copy(), color1 * 1.2, color2, True)
         # cv2_imshow(filtered_img_MYO)
+        save_img(filtered_img_LV, "A_filtered_img_LV_" + str(string.ascii_lowercase[i]))
+        save_img(filtered_img_MYO, "B_filtered_img_MYO_" + str(string.ascii_lowercase[i]))
 
         th_LV = cv.adaptiveThreshold(filtered_img_LV, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 31, 7)
         th_MYO = cv.adaptiveThreshold(filtered_img_MYO, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 31, 7)
         # cv2_imshow(th_LV)
         # cv2_imshow(th_MYO)
+        save_img(th_LV, "C_th_LV_" + str(string.ascii_lowercase[i]))
+        save_img(th_MYO, "D_th_MYO_" + str(string.ascii_lowercase[i]))
 
         eroded_LV1 = cv.erode(th_LV, cv.getStructuringElement(cv.MORPH_ELLIPSE, (1, 1)))
         area_filtered_LV1 = filter_2D(eroded_LV1, area1, area2)
@@ -350,6 +422,7 @@ def run_ef_segmentation():
                               iterations=erode_iterations)
         # cv2_imshow(eroded_LV2)
         area_filtered_LV2 = filter_2D(eroded_LV2, area1 * 2, area2 * 0.01)
+        save_img(area_filtered_LV2, "E_area_filtered_LV_" + str(string.ascii_lowercase[i]))
 
         nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(area_filtered_LV2, None, None, None, 4,
                                                                             cv.CV_32S)
@@ -367,9 +440,12 @@ def run_ef_segmentation():
         LV_mask = np.zeros((labels.shape), np.uint8)
         LV_mask[labels == LV_label] = 255
         # cv2_imshow(LV_mask)
+        save_img(LV_mask, "G_localized_LV_" + str(string.ascii_lowercase[i]))
+
         LV_mask = cv.dilate(LV_mask, cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3)),
                             iterations=erode_iterations + 2 + dil_inc + LV_dilate_add)
         # cv2_imshow(LV_mask)
+        save_img(LV_mask, "I_dilated_LV_" + str(string.ascii_lowercase[i]))
 
         # Segment MYO
         th_MYO = th_MYO + LV_mask
@@ -382,6 +458,7 @@ def run_ef_segmentation():
                                iterations=erode_iterations + 3)
         # cv2_imshow(eroded_MYO2)
         area_filtered_MYO2 = filter_2D(eroded_MYO2, area1 * 2, area2 * 0.01)
+        save_img(area_filtered_MYO2, "F_area_filtered_MYO_" + str(string.ascii_lowercase[i]))
 
         nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(area_filtered_MYO2, None, None, None, 4,
                                                                             cv.CV_32S)
@@ -396,10 +473,13 @@ def run_ef_segmentation():
         MYO_mask = np.zeros((labels.shape), np.uint8)
         MYO_mask[labels == MYO_label] = 255
         # cv2_imshow(MYO_mask)
+        save_img(MYO_mask, "H_localized_MYO_" + str(string.ascii_lowercase[i]))
+
         MYO_mask = cv.dilate(MYO_mask, cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3)),
                              iterations=erode_iterations + 5 + Myo_dilate_add)
         # print("FIN_RESULT")
         # cv2_imshow(MYO_mask)
+        save_img(MYO_mask, "J_dilated_MYO_" + str(string.ascii_lowercase[i]))
 
         # Reasign labels
         LV_mask = Image.fromarray(LV_mask)
@@ -443,6 +523,8 @@ def run_ef_segmentation():
         SA_mask_ED.append(mask)
         SA_img_ED.append(img)
         SA_LV_mask_ED.append(LV_mask)
+        contoured_img = edge_detection(img, LV_mask)
+        save_img(contoured_img, "K_contoured_img_" + str(string.ascii_lowercase[i]))
 
     MYO_centers = np.array(MYO_centers)
     MYO_areas = np.array(MYO_areas)
@@ -469,5 +551,3 @@ def run_ef_segmentation():
     save_gif(SA_LV_mask_ED, "sa_ed_seg_ef_gif/")
     save_gif(SA_img_ED, "sa_ed_ef_gif/")
     return SA_LV_mask_ED, SA_img_ED, slice_locs_trimed
-
-

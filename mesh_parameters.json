@@ -1,0 +1,50 @@
+{
+    "RESOLUTION": [
+        180,
+        10,
+        500,
+        1
+    ],
+    "TARGETREDUCTION": [
+        0.68,
+        0.1,
+        1,
+        0.05
+    ],
+    "MAX_DEFORMATION_ITS": [
+        150,
+        10,
+        500,
+        1
+    ],
+    "PERCENTAGE": [
+        0.1,
+        0.01,
+        1,
+        0.01
+    ],
+    "SMOOTH_STRENGTH": [
+        200,
+        10,
+        500,
+        1
+    ],
+    "SMOOTH_LAMBDA": [
+        0.5,
+        0.1,
+        1,
+        0.1
+    ],
+    "REFINEITER2D": [
+        4,
+        0,
+        50,
+        1
+    ],
+    "REFINEITER3D": [
+        3,
+        0,
+        50,
+        1
+    ]
+}
