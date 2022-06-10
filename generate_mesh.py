@@ -5,6 +5,7 @@ import json
 from stl import mesh
 import numpy as np
 import pyvista as pv
+import csv
 
 
 # Resolve intersection and smooth surface mesh
@@ -53,11 +54,11 @@ def refine_mesh(file_path, save_path, Iter=0, name="lv_myo_volume_mesh_refined",
         gmsh.model.mesh.refine()
         gmsh.model.mesh.optimize("")
         gmsh.model.mesh.optimize("Netgen")
-        gmsh.model.mesh.optimize("")
-        gmsh.model.mesh.optimize("Netgen")
 
-    gmsh.write(save_path+name + save_type)
+    gmsh.write(save_path + name + save_type)
     gmsh.finalize()
+    nodes, elements, Elements_carp = convert_mesh_file(save_path + name + save_type)
+    write_carp_files(save_path, name + save_type, nodes, Elements_carp)
 
 
 def generate_3d_surface_mesh(path):
@@ -66,17 +67,17 @@ def generate_3d_surface_mesh(path):
 
 
 def generate_2d_surface_mesh(path, refine_iter):
-    lv_points = np.loadtxt(path+"LV_point_cloud.xyz", dtype='float', delimiter=",")[:, 0:3]
-    myo_points = np.loadtxt(path+"Myo_point_cloud.xyz", dtype='float', delimiter=",")[:, 0:3]
+    lv_points = np.loadtxt(path + "LV_point_cloud.xyz", dtype='float', delimiter=",")[:, 0:3]
+    myo_points = np.loadtxt(path + "Myo_point_cloud.xyz", dtype='float', delimiter=",")[:, 0:3]
 
     increment_interval = int(len(lv_points) / len(np.unique(lv_points[:, 2])))
     increment_list = [i for i in range(0, len(lv_points) + increment_interval, increment_interval)]
     try:
-        os.mkdir(path+"2d_surface_meshes")
+        os.mkdir(path + "2d_surface_meshes")
     except FileExistsError:
         pass
     try:
-        os.mkdir(path+"2d_surface_meshes_refined")
+        os.mkdir(path + "2d_surface_meshes_refined")
     except FileExistsError:
         pass
 
@@ -91,15 +92,16 @@ def generate_2d_surface_mesh(path, refine_iter):
         # mesh2 = pv.PolyData(P2).delaunay_2d()
         # mesh1.plot()
         # mesh2.plot()
-        mesh.save(path+"2d_surface_meshes/"+'lv_myo_2d_surface_mesh'+str(i+1)+".stl")
-        refine_mesh(path+"2d_surface_meshes/"+'lv_myo_2d_surface_mesh'+str(i+1)+".stl",
-                    path+"2d_surface_meshes_refined/", refine_iter, "lv_myo_2d_surface_mesh_refined"+str(i+1), ".stl")
+        mesh.save(path + "2d_surface_meshes/" + 'lv_myo_2d_surface_mesh' + str(i + 1) + ".stl")
+        refine_mesh(path + "2d_surface_meshes/" + 'lv_myo_2d_surface_mesh' + str(i + 1) + ".stl",
+                    path + "2d_surface_meshes_refined/", refine_iter, "lv_myo_2d_surface_mesh_refined" + str(i + 1),
+                    ".stl")
 
 
 def generate_3d_volume_mesh(path):
     gmsh.initialize()
-    gmsh.open(path+"processed_lv.stl")
-    gmsh.merge(path+"processed_myo.stl")
+    gmsh.open(path + "processed_lv.stl")
+    gmsh.merge(path + "processed_myo.stl")
 
     n = gmsh.model.getDimension()
     s = gmsh.model.getEntities(n)
@@ -117,8 +119,72 @@ def generate_3d_volume_mesh(path):
 
     # refined_mesh = gmsh.model.mesh.refine()
 
-    gmsh.write(path+"lv_myo_volume_mesh.msh")
+    gmsh.write(path + "lv_myo_volume_mesh.msh")
     gmsh.finalize()
+    nodes, elements, Elements_carp = convert_mesh_file(path + "lv_myo_volume_mesh.msh")
+    write_carp_files(path, "lv_myo_volume_mesh.msh", nodes, Elements_carp)
+
+
+def convert_mesh_file(filename, ele_dict={1: "Ln", 2: "Tr", 3: "Qd", 4: "Tt"}):
+    Nodes = []
+    Elements = []
+    Elements_carp = []
+
+    read_nodes = False
+    read_elements = False
+    ele_count = 0
+    tag_id = -1
+    with open(filename) as file:
+        for line in file:
+            l_striped = line.rstrip()
+            # Check identifier
+            if "$" in l_striped:
+                if l_striped == "$Nodes":
+                    read_nodes = True
+                    continue
+                elif l_striped == "$EndNodes":
+                    read_nodes = False
+                    continue
+                elif l_striped == "$Elements":
+                    read_elements = True
+                    continue
+                elif l_striped == "$EndElements":
+                    read_elements = False
+                    continue
+
+            # Read nodes or elements
+            if read_nodes:
+                point = l_striped.split(" ")
+                if len(point) == 3:
+                    Nodes.append(point)
+            elif read_elements:
+                element = list(np.array(l_striped.split(" ")).astype(int) - 1)
+                ele_count += 1
+                if (int(element[0]) + 1 > 3 and ele_count > 2) or (ele_count == 3 or ele_count == 4 or ele_count == 5):
+                    Elements.append(element[1:])
+                    Elements_carp.append([ele_type] + element[1:] + [str(tag_id)])
+                else:
+                    ele_type = ele_dict[list(np.array(l_striped.split(" ")).astype(int))[2]]
+                    tag_id += 1
+
+    return Nodes, Elements, Elements_carp
+
+
+def write_carp_files(outdir, filename, nodes, elements):
+    out_path = outdir + filename.split(".")[0] + "/"
+    try:
+        os.mkdir(out_path)
+    except FileExistsError:
+        pass
+
+    with open(out_path + filename.split(".")[0] + ".pts", "w", newline='') as f:
+        f.write(str(len(nodes)) + "\n")
+        wr = csv.writer(f, delimiter=" ")
+        wr.writerows(nodes)
+    with open(out_path + filename.split(".")[0] + ".elem", "w", newline='') as f:
+        f.write(str(len(elements)) + "\n")
+        wr = csv.writer(f, delimiter=" ")
+        wr.writerows(elements)
 
 
 # Shortcut for generating all 2D surface, and 3D surface & volume meshes
@@ -139,4 +205,5 @@ def generate_meshes(working_path):
 
     print("Refining meshes...")
     refine_mesh(working_path + "lv_myo_volume_mesh.msh", working_path, parameter_dict["REFINEITER3D"][0])
+
     print("All mesh generations finished")
