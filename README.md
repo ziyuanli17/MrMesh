@@ -14,12 +14,9 @@
 ## Preparations
 1. Download the [stable release](https://github.com/ziyuanli17/CardioFree/releases) and extract the ziped file
 2. Run **GUI.exe** (Currently only support Windows machine)
-
 [![Overview](https://drive.google.com/uc?export=view&id=18pGqp7AB0WF2xRfH28gvIx5gHtXuUnS7)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
-
-**NOTE**: the input folder contains two example dicom files. example1: segmentation works using mUNet only.example2: mUnet outlier, EF required. If you are using your own file(s), make sure they match the examples' file type and dimensions (2D images + time series + slices along z)
+ **NOTE**: the input folder contains two example dicom files. example1: segmentation works using mUNet only.example2: mUnet outlier, EF required. If you are using your own file(s), make sure they match the examples' file type and dimensions (2D images + time series + slices along z)
 3. Wait until the mUnet segmentation finishes and the results are displayed
-
 **NOTE**: All outputs will be saved in the **Output folder**
 
 Ready to generate all hell through a 3-step magic?
@@ -27,7 +24,7 @@ Ready to generate all hell through a 3-step magic?
 ## (1) Segmentation: mUnet
 The UNet segmentations are displayed along with their MRI at end of distole. Click on **EF Postprocessing** if the segmentations are undesirable. Otherwise, skip ***(2)*** and go to ***Step (3)***
 
-    [![Overview](https://drive.google.com/uc?export=view&id=1gEwGDEfoeGT5IndnJo5cx452tusP1GOd)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
+[![Overview](https://drive.google.com/uc?export=view&id=1gEwGDEfoeGT5IndnJo5cx452tusP1GOd)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
 ## (2) Postrocessing: EF
 In EF prostprocessing you can adjust the parameters described by the [publication](https://docs.google.com/document/d/15KwaYJncmZG8PiatVQ2rn-Fxw9KLR3YiaoLPZSIU4w4/edit?usp=sharing) and generate optimal segmentations. 
 **NOTE**: Please make sure you refer to the **Parameter Optimization** section before you start adjusting.
