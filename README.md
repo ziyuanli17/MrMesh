@@ -12,10 +12,10 @@
 
 # User Instruction
 ## Preparations
-1. Download the [stable release](https://github.com/ziyuanli17/CardioFree/releases) and extract the ziped file
-2. Run **GUI.exe** (Currently only support Windows machine)  
+1. Download the [stable release](https://github.com/ziyuanli17/CardioFree/releases) and extract the ziped file  
+2. Run **GUI.exe** (Currently only support Windows machine but the Mac version is coming soon)  
 **NOTE**: the input folder contains two example dicom files. example1: segmentation works using mUNet only. example2: mUnet outlier, EF required. If you are using your own file(s), make sure they match the examples' file type and dimensions (2D images + time series + slices along z)
-3. Wait until the mUnet segmentation finishes and the results are displayed
+3. Wait until the mUnet segmentation finishes and the results are displayed  
 **NOTE**: All outputs will be saved in the **Output folder**
 
 Ready to generate all hell through a 3-step magic?
@@ -58,9 +58,8 @@ To install all, run the command below.
 pip install -r requirements.txt
 ```
 ## Additional Pacakges
-2 pip-uninstallable packages are required but are already included in this repo (No need to reinstall). For details, refer to the git repositories below.
-
-**Segmentation**: [mUNet](https://jcmr-online.biomedcentral.com/articles/10.1186/s12968-018-0471-x)
-
+2 pip-uninstallable packages are required but are already included in this repo (No need to reinstall).  
+For details, refer to the git repositories below.  
+**Segmentation**: [mUNet](https://jcmr-online.biomedcentral.com/articles/10.1186/s12968-018-0471-x)  
 **Surface Mesh Generation**: [SurfCo](https://github.com/BenVillard/surfco/blob/master/README.md)
 
