@@ -1,6 +1,6 @@
 # MrMesh: MRI to Mesh
 ## _Automatically generate cardiac segmentations, contours, and meshes from SAX MR images_
-[![Overview](https://drive.google.com/uc?export=view&id=1xK7LrTNp9QFfqOYjSPxX0U1QitpnuZ4Y?raw=true)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
+[![Overview](https://drive.google.com/uc?export=view&id=1xK7LrTNp9QFfqOYjSPxX0U1QitpnuZ4Y)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
 ### Latest Release: [Here](https://) 
 
 ## Features
