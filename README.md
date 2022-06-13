@@ -25,7 +25,7 @@ The UNet segmentations are displayed along with their MRI at end of distole. Cli
 
 [![Overview](https://drive.google.com/uc?export=view&id=1gEwGDEfoeGT5IndnJo5cx452tusP1GOd)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
 ## (2) Postrocessing: EF
-In EF prostprocessing you can adjust the parameters described by the [publication](https://docs.google.com/document/d/15KwaYJncmZG8PiatVQ2rn-Fxw9KLR3YiaoLPZSIU4w4/edit?usp=sharing) and generate optimal segmentations. 
+In EF prostprocessing you can adjust the parameters described by the [publication](https://docs.google.com/document/d/15KwaYJncmZG8PiatVQ2rn-Fxw9KLR3YiaoLPZSIU4w4/edit?usp=sharing) and generate optimal segmentations.   
 **NOTE**: Please make sure you refer to the **Parameter Optimization** section before you start adjusting.
 [![Overview](https://drive.google.com/uc?export=view&id=1LQ_zQIOpU2p_cq6eZ0VpeDALuaMMwu8U)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
 **NOTE**: After you finish adjusting the slide bars, click on **Run EF Postprocessing** to display the new results.
