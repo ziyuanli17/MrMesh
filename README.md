@@ -12,6 +12,9 @@
 
 # User Instruction
 ## Preparations
+**NOTE**: Make sure you have Python3 and Matlab R2021a(9.10) runtime installed, or you can install them from the links below:  
+Python3: https://www.python.org/downloads/release/python-380/   
+Matlab runtime: https://www.mathworks.com/products/compiler/matlab-runtime.html   
 1. Download the [stable release](https://github.com/ziyuanli17/CardioFree/releases) and extract the ziped file  
 2. Run **GUI.exe** (Currently only support Windows machine but the Mac version is coming soon)  
 **NOTE**: the input folder contains two example dicom files. example1: segmentation works using mUNet only. example2: mUnet outlier, EF required. If you are using your own file(s), make sure they match the examples' file type and dimensions (2D images + time series + slices along z)
