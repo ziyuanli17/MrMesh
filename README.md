@@ -12,7 +12,7 @@
 
 # User Instruction
 ## Preparations
-**NOTE**: Make sure you have Python3 and Matlab R2021a(9.10) runtime installed, or you can install them from the links below:  
+0. Make sure you have Python3 and Matlab R2021a(9.10) runtime installed, or you can install them from the links below:  
 Python3: https://www.python.org/downloads/release/python-380/   
 Matlab runtime: https://www.mathworks.com/products/compiler/matlab-runtime.html   
 1. Download the [stable release](https://github.com/ziyuanli17/CardioFree/releases) and extract the ziped file  
