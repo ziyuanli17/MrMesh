@@ -59,6 +59,9 @@ slice_locs = parameter_dict["slice_locs"]
 
 mesh_parameter_dict = json.loads(open('mesh_parameters.json', 'r').read())
 
+print("Copyright (c) 2022 Silva Lab")
+print("All Rights Reserved")
+
 
 # Convert dicom to gif for display
 def dicom_to_gif(input_path, output_folder):
@@ -533,17 +536,16 @@ def run_mesh_gui(app, window, name):
 
 
 if __name__ == '__main__':
-    # Start creating output folders
-    try:
-        os.mkdir('Output')
-        os.mkdir('sa_ed_ef_gif')
-        os.mkdir('sa_ed_gif')
-        os.mkdir('sa_ed_seg_ef_gif')
-        os.mkdir('sa_ed_seg_gif')
-        os.mkdir('ef_process')
-    except FileExistsError:
-        pass
-    os.mkdir('ef_processw')
+    # # Start creating output folders
+    # try:
+    #     os.mkdir('Output')
+    #     os.mkdir('sa_ed_ef_gif')
+    #     os.mkdir('sa_ed_gif')
+    #     os.mkdir('sa_ed_seg_ef_gif')
+    #     os.mkdir('sa_ed_seg_gif')
+    #     os.mkdir('ef_process')
+    # except:
+    #     pass
     run_unet_segmentation(input_names[name_idx])
 
     # Add window and properties

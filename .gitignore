@@ -1,0 +1,9 @@
+*.spec
+gmsh.py
+build/
+dist/
+Output/
+sa_ed_ef_gif/
+sa_ed_gif/
+sa_ed_seg_ef_gif/
+sa_ed_seg_gif/

@@ -16,8 +16,7 @@ import string
 from contour_extraction import extract_contour
 from PIL import Image
 
-print("Copyright (c) 2022 Silva Lab")
-print("All Rights Reserved")
+
 # Load parameters
 parameter_dict = json.loads(open('parameters.json', 'r').read())
 """# **Software Parameters**"""
