@@ -238,7 +238,7 @@ def run_next(window):
         QMessageBox.about(window, "Notice", "Results are saved in the Output folder. "
                           + "Click Ok to finish.")
         window.close()
-
+        exit(0)
 
 show_process = False
 ef_process_window = None
@@ -543,7 +543,7 @@ if __name__ == '__main__':
         os.mkdir('ef_process')
     except FileExistsError:
         pass
-
+    os.mkdir('ef_processw')
     run_unet_segmentation(input_names[name_idx])
 
     # Add window and properties
