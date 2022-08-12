@@ -554,7 +554,7 @@ if __name__ == '__main__':
         os.mkdir('ef_process')
     except:
         pass
-    # run_unet_segmentation(input_names[name_idx])
+    run_unet_segmentation(input_names[name_idx])
 
     # Add window and properties
     app = QApplication(sys.argv)
