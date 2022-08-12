@@ -291,14 +291,13 @@ def extract_contour(SA_LV_mask_ED, SA_img_ED, slice_locs_trimed, folder):
     full_arr = []
     z_depth1 = slice_locs_trimed[0]
     z_depth2 = slice_locs_trimed[0]
-
+    print(slice_locs_trimed)
     for i in range(len(SA_LV_mask_ED)):
         # cv2_imshow(tiff_copy[i])
         reconstructed = SA_LV_mask_ED_copy[i]
         tiff2.append(reconstructed)
         np.clip(reconstructed, 0, 255, out=reconstructed)
         reconstructed = reconstructed.astype('uint8')
-
 
         _, _, _, centroids = cv2.connectedComponentsWithStats(reconstructed, None, None, None, 4, cv2.CV_32S)
 
@@ -313,6 +312,7 @@ def extract_contour(SA_LV_mask_ED, SA_img_ED, slice_locs_trimed, folder):
 
         LV_solid = reconstructed.copy()
         LV_solid[LV_solid == 255] = 0
+        LV_solid[LV_solid == 170] = 0
         LV_solid[LV_solid != 0] = 255
         edges2, _ = edge_detection(LV_solid)
 

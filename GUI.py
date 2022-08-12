@@ -1,3 +1,4 @@
+
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLabel
 from PyQt5.QtGui import QIcon, QPixmap, QCursor
@@ -17,6 +18,8 @@ import json
 import EF
 import contour_extraction
 import generate_mesh
+import vtkmodules
+import vtk
 
 StyleSheet = '''
     QPushButton {
@@ -47,6 +50,10 @@ StyleSheet = '''
         border-color: #8c1113;
     }
 '''
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+
 # Read and sort directory names
 input_names = np.array(os.listdir("Input/"))
 input_names.sort()
@@ -85,6 +92,7 @@ def read_ed_frames():
     for i in range(np.shape(ds_sa_ed_img)[-1]):
         img = ds_sa_ed_img[:, :, i].astype('uint16')
         seg = ds_sa_ed_seg[:, :, i].astype('uint16')
+        seg[seg == 255] = 0
         if np.max(img) != 0:
             img = ((img / np.max(img)) * 255).astype('uint16')
         if len(np.where(img != 0)) // len(np.where(img == 0)) > 0.05:
@@ -270,7 +278,7 @@ def add_button(app, img_width, img_height, window, row, text, name, mid_img, wid
     ef_process_window = QWidget()
 
     def click_method(button_name):
-        global name_idx, parameter_dict, mesh_parameter_dict, SA_LV_mask_ED, SA_img_ED, slice_locs_trimed, show_process
+        global name_idx, parameter_dict, mesh_parameter_dict, SA_full_mask_ED, SA_img_ED, slice_locs_trimed, show_process, SA_LV_mask_ED
         cur_name = input_names[name_idx].split(".")[0] + "/"
         if button_name == "Finish Segmentation":
             name_idx += 1
@@ -284,10 +292,10 @@ def add_button(app, img_width, img_height, window, row, text, name, mid_img, wid
             with open('parameters.json', 'w', encoding='utf-8') as f:
                 json.dump(parameter_dict, f, ensure_ascii=False, indent=4)
             try:
-                SA_LV_mask_ED, SA_img_ED, slice_locs_trimed = EF.run_ef_segmentation()
+                SA_full_mask_ED, SA_LV_mask_ED, SA_img_ED, slice_locs_trimed = EF.run_ef_segmentation()
             except:
-                SA_img_ED, SA_LV_mask_ED, slice_locs_trimed = generate_dummies()
-                EF.save_gif(SA_LV_mask_ED, "sa_ed_seg_ef_gif/")
+                SA_img_ED, SA_full_mask_ED, slice_locs_trimed = generate_dummies()
+                EF.save_gif(SA_full_mask_ED, "sa_ed_seg_ef_gif/")
                 EF.save_gif(SA_img_ED, "sa_ed_ef_gif/")
 
             # contour_extraction.extract_contour(SA_LV_mask_ED, SA_img_ED, slice_locs_trimed, "Output/" + cur_name)
@@ -301,10 +309,11 @@ def add_button(app, img_width, img_height, window, row, text, name, mid_img, wid
             with open('parameters.json', 'w', encoding='utf-8') as f:
                 json.dump(parameter_dict, f, ensure_ascii=False, indent=4)
             try:
-                SA_LV_mask_ED, SA_img_ED, slice_locs_trimed = EF.run_ef_segmentation()
+                SA_full_mask_ED, SA_LV_mask_ED, SA_img_ED, slice_locs_trimed = EF.run_ef_segmentation()
             except:
-                SA_img_ED, SA_LV_mask_ED, slice_locs_trimed = generate_dummies()
-                EF.save_gif(SA_LV_mask_ED, "sa_ed_seg_ef_gif/")
+                SA_img_ED, SA_full_mask_ED, slice_locs_trimed = generate_dummies()
+                SA_LV_mask_ED = SA_full_mask_ED
+                EF.save_gif(SA_full_mask_ED, "sa_ed_seg_ef_gif/")
                 EF.save_gif(SA_img_ED, "sa_ed_ef_gif/")
 
             clear_all(window)
@@ -499,7 +508,6 @@ def run_ef_process_gui(app, window, name):
     window.setWindowIcon(QtGui.QIcon('logo.png'))
     screen = app.primaryScreen()
     size = screen.size()
-
     # Display images
     i = 0
     num_skip = max_num_img - min_num_img
@@ -537,20 +545,19 @@ def run_mesh_gui(app, window, name):
 
 if __name__ == '__main__':
     # # Start creating output folders
-    # try:
-    #     os.mkdir('Output')
-    #     os.mkdir('sa_ed_ef_gif')
-    #     os.mkdir('sa_ed_gif')
-    #     os.mkdir('sa_ed_seg_ef_gif')
-    #     os.mkdir('sa_ed_seg_gif')
-    #     os.mkdir('ef_process')
-    # except:
-    #     pass
-    run_unet_segmentation(input_names[name_idx])
+    try:
+        os.mkdir('Output')
+        os.mkdir('sa_ed_ef_gif')
+        os.mkdir('sa_ed_gif')
+        os.mkdir('sa_ed_seg_ef_gif')
+        os.mkdir('sa_ed_seg_gif')
+        os.mkdir('ef_process')
+    except:
+        pass
+    # run_unet_segmentation(input_names[name_idx])
 
     # Add window and properties
     app = QApplication(sys.argv)
     app.setStyleSheet(StyleSheet)
     window = QWidget()
-
     run_unet_gui(app, window, input_names[name_idx])

@@ -16,6 +16,13 @@ import string
 from contour_extraction import extract_contour
 from PIL import Image
 
+import matplotlib.pyplot as plt
+from skimage import io
+from scipy.stats import itemfreq
+from sklearn.cluster import DBSCAN
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 # Load parameters
 parameter_dict = json.loads(open('parameters.json', 'r').read())
@@ -44,18 +51,23 @@ hough_thresh = 20  # Threshold for Hough circle detection (larger would increase
 minR = 5  # Lower radius limit for circle detection
 maxR = 18  # Upper radius limit for circle detection
 outlier_threshold = parameter_dict["outlier_thresh"][0]  # Smaller value leads to more outliers being detected
-
+ext_dilate = parameter_dict["ext_dilate_iters"][0]
 start_idx = Loc_idx
 end_idx = Loc_idx
 
 """# Load images and masks"""
 slice_locs = parameter_dict["slice_locs"]
 
-
 # Utils function to load and save nifti files with the nibabel package
 def load_nii(img_path):
     nimg = nib.load(img_path)
     return nimg.get_fdata(), nimg.affine, nimg.header
+
+
+def cv2_imshow(img):
+    plt.imshow(img, cmap='gray')
+    plt.axis('off')
+    plt.show()
 
 
 # for i in range(len(imgs_SA[0][0])):
@@ -77,7 +89,7 @@ def load_nii(img_path):
 # Remove colors of selection
 def bandpass_filter(img, color1=225, color2=800, reverse=False):
     # Replace out-off-range colors with black
-    img[img < 30] = 0
+    img[img < 5] = 0
     if reverse:
         img[img >= color1] = 0
     else:
@@ -235,9 +247,8 @@ def reject_outliers(data, m):
 def save_gif(ds_sa_ed_img, output_folder):
     ds_sa_ed_img = np.array(ds_sa_ed_img)
     for i in range(np.shape(ds_sa_ed_img)[0]):
-        img = ds_sa_ed_img[i, :, :].astype('uint16')
-        if np.max(img) != 0:
-            img = ((img / np.max(img)) * 255).astype('uint16')
+        img = ds_sa_ed_img[i, :, :]
+
         im = Image.fromarray(img)
         im.save(output_folder + str(string.ascii_lowercase[i]) + ".gif")
 
@@ -282,33 +293,137 @@ def format_img(img, to_gray=True):
 
 def edge_detection(img, seg):
     img = format_img(img, False)
-    seg = format_img(seg)
+    seg_lv = seg.copy()
+    seg_lv[seg_lv != 60] = 0
+    seg_lv[seg_lv == 60] = 255
+
+    seg_rv = seg.copy()
+    seg_rv[seg_rv != 120] = 0
+    seg_rv[seg_rv == 120] = 255
+
+    seg_ext_myo = seg.copy()
+    seg_ext_myo[seg_ext_myo != 0] = 255
 
     seg_myo = seg.copy()
-    seg_myo[seg_myo != 0] = 255
-    seg_lv = seg.copy()
-    seg_lv[seg_lv == 255] = 0
-    seg_lv[seg_lv != 0] = 255
+    seg_myo[seg_myo == 60] = 255
+    seg_myo[seg_myo != 255] = 0
 
     i = 0
-    for s in [seg_myo, seg_lv]:
+    colors = [(0, 0, 255), (0, 255, 255), (255, 0, 255), (255, 255, 0)]
+    for s in [seg_lv, seg_rv, seg_myo, seg_ext_myo]:
         # Blur the image for better edge detection
         img_blur = cv.GaussianBlur(s, (5, 5), 0)
         # Canny Edge Detection
         edges = cv.Canny(image=img_blur, threshold1=0, threshold2=0)  # Canny Edge Detection
 
         contours, h = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-
-        big_contour = max(contours, key=cv.contourArea)
-        M = cv.moments(big_contour)
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-
-        cv.drawContours(img, contours, -1, (0, 0 + i, 255 - i), thickness=1, lineType=cv.LINE_AA)
-        i += 255
+        cv.drawContours(img, contours, -1, colors[i], thickness=1, lineType=cv.LINE_AA)
+        i += 1
 
     # Display Canny Edge Detection Image
     return img
+
+
+def closest_nodes(node, nodes, n=6):
+    nodes = np.asarray(nodes)
+    dist_2 = np.sum((nodes - node) ** 2, axis=1)
+    return np.argsort(dist_2)[1:n]
+
+
+def segment_rv(SA_LV_mask_ED, RV_pts_candids, RV_stats):
+    # Take input image and area, remove any objects smaller than the defined area
+    def undesired_objects(binary_map, area, check):
+        # do connected components processing
+        nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(cv.bitwise_not(binary_map), None, None,
+                                                                            None, 4, cv.CV_32S)
+
+        # get CC_STAT_AREA component as stats[label, COLUMN]
+        areas = stats[1:, cv.CC_STAT_AREA]
+
+        result = np.zeros((labels.shape), np.uint8)
+        for i in range(0, nlabels - 1):
+            if areas[i] >= area:  # keep
+                result[labels == i + 1] = 255
+            if areas[i] >= area3 and check == 2:
+                result[labels == i + 1] = 0
+        return cv.bitwise_not(result)
+
+    # Filter out both black and white connected components
+    def filter_2D(img, area1=1000, area2=100):
+        # Creating kernel
+        kernel = np.ones((1, 1), np.uint8)
+        # Remove small objects two-directionally
+        result = undesired_objects(img, area1, 1)
+        # print("Black components filtered")
+        # cv2_imshow(result)
+        result = cv.bitwise_not(undesired_objects(cv.bitwise_not(result), area2, 2))
+        # print("White components filtered")
+        # cv2_imshow(result)
+        return result
+
+    # RV segmentation and postprocessing
+    RV_pts_candids = np.array(RV_pts_candids)
+    # print(RV_pts_candids)
+    # Cluster 2D points
+    clustering = DBSCAN(eps=10, min_samples=2).fit(RV_pts_candids)
+    cluster_labels = clustering.labels_
+
+    RV_idxs = cluster_labels == 0
+
+    RV_pts_good = RV_pts_candids[RV_idxs]
+    # print(RV_pts_good)
+    RV_pts_bad = RV_pts_candids[~RV_idxs]
+
+    RV_std_x = RV_pts_good[:, 0].std()
+    RV_std_y = RV_pts_good[:, 1].std()
+    if RV_std_y < RV_std_x:
+        y_med = np.median(RV_pts_good[:, 1])
+        per_diff_y = np.abs(RV_pts_bad[:, 1] - y_med) / ((RV_pts_bad[:, 1] + y_med) / 2)
+        RV_centers = np.append(RV_pts_good, RV_pts_bad[per_diff_y < 0.05], 0)
+    else:
+        x_med = np.median(RV_pts_good[:, 1])
+        per_diff_x = np.abs(RV_pts_bad[:, 1] - x_med) / ((RV_pts_bad[:, 1] + x_med) / 2)
+        RV_centers = np.append(RV_pts_good, RV_pts_bad[per_diff_x < 0.05], 0)
+    # print(len(SA_LV_mask_ED))
+    # print(len(RV_centers))
+    full_masks = []
+    for i in range(len(SA_LV_mask_ED)):
+        if i < (len(RV_centers) - 1):
+            for j in range(len(RV_stats["centers"][0])):
+                RV_center_cand = RV_stats["centers"][i][j]
+                # print(RV_center_cand)
+                if RV_center_cand[0] == np.nan:
+                    break
+
+                # Attach RV mask and reasign labels
+                elif np.isin(RV_center_cand, RV_centers).any():
+                    # print(i)
+                    RV_mask = RV_stats["masks"][i][j]
+                    RV_mask_array = Image.fromarray(RV_mask)
+                    # cv2_imshow(np.array(RV_mask_array))
+                    smooth_mask_RV = np.array(RV_mask_array.filter(ImageFilter.ModeFilter(size=7)))
+
+                    # cv2_imshow(smooth_mask_RV)
+                    smooth_mask_RV[smooth_mask_RV == 255] = 120
+                    LV_MYO_mask = SA_LV_mask_ED[i]
+
+                    full_mask = LV_MYO_mask + smooth_mask_RV
+                    # cv2_imshow(full_mask)
+                    full_mask[full_mask == 255] = 200
+                    full_mask[full_mask == 0] = 255
+                    full_mask[full_mask != 255] = 0
+
+                    holes = filter_2D(full_mask, 1000, 1)
+
+                    full_mask = LV_MYO_mask + smooth_mask_RV + holes
+                    full_mask[full_mask == 180] = 255
+                    full_mask[full_mask == 119] = 120
+                    # cv2_imshow(full_mask)
+                    full_masks.append(full_mask)
+        else:
+            full_masks.append(SA_LV_mask_ED[i])
+            # print("ex")
+    return full_masks
 
 
 """# **LV and Myo Segmentation**"""
@@ -346,7 +461,8 @@ def run_ef_segmentation():
     minR = 5  # Lower radius limit for circle detection
     maxR = 18  # Upper radius limit for circle detection
     outlier_threshold = parameter_dict["outlier_thresh"][0]  # Smaller value leads to more outliers being detected
-
+    ext_dilate = parameter_dict["ext_dilate_iters"][0]
+    pap_percentile = parameter_dict["pap_percentile"][0]
     start_idx = Loc_idx
     end_idx = Loc_idx
 
@@ -362,9 +478,14 @@ def run_ef_segmentation():
     MYO_areas = []
     MYO_centers = []
 
+    RV_stats = {"labels": [], "centers": [], "weights": [], "masks": []}
+    RV_pts_candids = np.array([])
+
     # Find nn mask center
     if parameter_dict["lv_loc"] == []:
         nn_mask_LV = masks_SA[:, :, Loc_idx].copy()
+        nn_mask_LV = cv.normalize(nn_mask_LV, None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX,
+                                  dtype=cv.CV_64F).astype(np.uint8)
         nn_mask_LV[nn_mask_LV == 2] = 0  # Myo
         nn_mask_LV[nn_mask_LV == 3] = 0  # RV
         nn_mask_LV[nn_mask_LV == 1] = 255  # LV
@@ -393,10 +514,8 @@ def run_ef_segmentation():
         # cv2_imshow(draw_image)
 
         # Segment LV
-        img = imgs_SA[:, :, i].copy()
-        img = (img / np.max(img)) * 255
-        np.clip(img, 0, 255, out=img)
-        img = img.astype('uint8')
+        img = cv.normalize(imgs_SA[:, :, i], None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_64F).astype(
+            np.uint8)
         # cv2_imshow(img)
 
         filtered_img_LV = bandpass_filter(img.copy(), color1, color2)
@@ -423,21 +542,22 @@ def run_ef_segmentation():
         area_filtered_LV2 = filter_2D(eroded_LV2, area1 * 2, area2 * 0.01)
         save_img(area_filtered_LV2, "E_area_filtered_LV_" + str(string.ascii_lowercase[i]))
 
-        nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(area_filtered_LV2, None, None, None, 4,
-                                                                            cv.CV_32S)
+        nlabels, LV_labels, stats, LV_cand_centroids = cv.connectedComponentsWithStats(area_filtered_LV2, None, None,
+                                                                                       None, 4,
+                                                                                       cv.CV_32S)
 
-        centroids = centroids[1:]
-        LV_center = centroids[closest_node(c_LV, centroids)].copy()
+        LV_cand_centroids = LV_cand_centroids[1:]
+        LV_center = LV_cand_centroids[closest_node(c_LV, LV_cand_centroids)].copy()
 
-        LV_label = labels[int(LV_center[1]), int(LV_center[0])]
+        LV_label = LV_labels[int(LV_center[1]), int(LV_center[0])]
         area = stats[1:, cv.CC_STAT_AREA][LV_label - 1]
         if area / area_nn < 0.2:
             dil_inc = 2
         else:
             dil_inc = 0
 
-        LV_mask = np.zeros((labels.shape), np.uint8)
-        LV_mask[labels == LV_label] = 255
+        LV_mask = np.zeros((LV_labels.shape), np.uint8)
+        LV_mask[LV_labels == LV_label] = 255
         # cv2_imshow(LV_mask)
         save_img(LV_mask, "G_localized_LV_" + str(string.ascii_lowercase[i]))
 
@@ -479,6 +599,84 @@ def run_ef_segmentation():
         # print("FIN_RESULT")
         # cv2_imshow(MYO_mask)
         save_img(MYO_mask, "J_dilated_MYO_" + str(string.ascii_lowercase[i]))
+
+        LV_img = img.copy()
+        LV_img[LV_labels != LV_label] = 0
+        LV_img_1d = LV_img.flatten()
+        LV_img_1d = LV_img_1d[LV_img_1d != 0]
+        LV_med_color = np.median(LV_img_1d)
+        LV_area = LV_img_1d.size
+
+        # Segment RV
+        # Find candidates' stats
+        RV_cand_centers = LV_cand_centroids[closest_nodes(LV_center, LV_cand_centroids)]
+        RV_cand_med_colors = []
+        RV_cand_centers_list = []
+        RV_masks_candids = []
+        for RV_center in RV_cand_centers:
+            RV_label_cand = LV_labels[int(RV_center[1]), int(RV_center[0])]
+
+            RV_img_cand = img.copy()
+            RV_img_cand[LV_labels != RV_label_cand] = 0
+            RV_img_cand_1d = RV_img_cand.flatten()
+            RV_img_cand_1d = RV_img_cand_1d[RV_img_cand_1d != 0]
+            RV_area_cand = RV_img_cand_1d.size
+
+            # Exlude the last slice
+            if i == masks_SA.shape[2] - 1:
+                continue
+
+            # Not append regions too large or small
+            if RV_area_cand > 5 * LV_area or RV_area_cand < LV_area / 10:
+                continue
+
+            # Not append RV intersecting with too much or little of LV MYO
+            RV_img_cand_temp = RV_img_cand.copy()
+            RV_img_cand_temp[RV_img_cand_temp != 0] = 255
+
+            RV_img_cand_temp = cv.dilate(RV_img_cand_temp, cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3)),
+                                         iterations=erode_iterations + 1)
+            RV_masks_candids.append(RV_img_cand_temp)
+
+            RV_MYO_intersect = RV_img_cand_temp - MYO_mask
+            RV_percent_retain = RV_MYO_intersect[RV_MYO_intersect == 255].size / RV_img_cand_temp[
+                RV_img_cand_temp == 255].size
+            if RV_percent_retain < 0.5 or RV_percent_retain == 1:
+                continue
+
+            RV_cand_centers_list.append(RV_center)
+            RV_med_color_cand = np.median(RV_img_cand_1d)
+            RV_cand_med_colors.append(RV_med_color_cand)
+
+            # print(RV_center)
+            # cv2_imshow(RV_img_cand)
+
+        if len(RV_cand_med_colors) != 0:
+            RV_cand_med_colors_diff = np.abs(RV_cand_med_colors - LV_med_color)
+            # print(RV_cand_med_colors_diff)
+            RV_cand_med_colors_diff = RV_cand_med_colors_diff / np.max(RV_cand_med_colors_diff)
+            RV_cand_weights = np.flip(np.arange(1, len(RV_cand_med_colors) + 1, 1, dtype=int))
+            RV_cand_weights = np.array(RV_cand_weights - (len(RV_cand_weights) / 2 * RV_cand_med_colors_diff))
+
+            RV_stats["labels"].append(labels)
+            RV_cand_centers_list = np.array(RV_cand_centers_list)
+            RV_cand_weights_idxs = (-RV_cand_weights).argsort()
+            if len(RV_pts_candids) == 0:
+                RV_pts_candids = RV_cand_centers_list[RV_cand_weights_idxs]
+            else:
+                RV_pts_candids = np.append(RV_pts_candids, RV_cand_centers_list[RV_cand_weights_idxs], 0)
+
+            RV_cand_centers_sorted = list(RV_cand_centers_list[RV_cand_weights_idxs])
+
+            if len(RV_cand_centers_sorted) < 5:
+                for j in range(5 - len(RV_cand_centers_sorted)):
+                    RV_cand_centers_sorted.append(np.array([np.nan, np.nan]))
+
+            RV_stats["centers"].append(np.array(RV_cand_centers_sorted))
+            RV_stats["weights"].append(RV_cand_weights[RV_cand_weights_idxs])
+            RV_stats["masks"].append(np.array(RV_masks_candids)[RV_cand_weights_idxs])
+
+            # print(RV_cand_weights)
 
         # Reasign labels
         LV_mask = Image.fromarray(LV_mask)
@@ -522,13 +720,12 @@ def run_ef_segmentation():
         SA_mask_ED.append(mask)
         SA_img_ED.append(img)
         SA_LV_mask_ED.append(LV_mask)
-        contoured_img = edge_detection(img, LV_mask)
-        save_img(contoured_img, "K_contoured_img_" + str(string.ascii_lowercase[i]))
 
     MYO_centers = np.array(MYO_centers)
     MYO_areas = np.array(MYO_areas)
 
     SA_img_ED = np.array(SA_img_ED)
+    print(slice_locs_trimed)
     slice_locs_trimed = np.array(slice_locs_trimed)
 
     SA_LV_mask_ED = np.array(SA_LV_mask_ED)
@@ -543,10 +740,151 @@ def run_ef_segmentation():
 
     SA_LV_mask_ED = SA_LV_mask_ED[(outliers_idx) & (outliers_idx2)]
     SA_img_ED = SA_img_ED[(outliers_idx) & (outliers_idx2)]
+    print((outliers_idx) & (outliers_idx2))
+    print(slice_locs_trimed)
     slice_locs_trimed = slice_locs_trimed[(outliers_idx) & (outliers_idx2)]
 
+    RV_pts_candids_temp = []
+    for key, val in RV_stats.items():
+        RV_stats[key] = np.array(RV_stats[key])[(outliers_idx) & (outliers_idx2)]
+        del_dec = 0
+        for i in range(len(RV_pts_candids)):
+            if np.isin(RV_pts_candids[i], RV_stats[key]).any():
+                RV_pts_candids_temp.append(RV_pts_candids[i])
+
+    RV_pts_candids = np.array(RV_pts_candids_temp)
+
+    SA_LV_mask_ED_full = segment_rv(SA_LV_mask_ED, RV_pts_candids, RV_stats)
+
+    # Full myo and trebeculations
+    SA_LV_mask_ED_temp = SA_LV_mask_ED_full.copy()
+    SA_LV_mask_ED_full_myo = []
+    for i in range(len(SA_LV_mask_ED_temp)):
+        # print("Slice location: ", slice_locs_trimed[i])
+        # Normalize bw 0 and 255, and convert to int
+        img = SA_img_ED[i]
+        mask = SA_LV_mask_ED_temp[i]
+
+        # Separate bw lv and my masks
+        lv_mask = mask.copy()
+        lv_mask[lv_mask == 255] = 0
+        lv_mask[lv_mask == 120] = 0
+        lv_mask[lv_mask == 60] = 255
+
+        myo_mask = mask.copy()
+        myo_mask[myo_mask != 255] = 0
+
+        # Display actual seg
+        lv_seg = cv.bitwise_and(img.copy(), img.copy(), mask=lv_mask)
+        lv_seg_1d = lv_seg.flatten()
+        lv_seg_1d = lv_seg_1d[lv_seg_1d != 0]
+
+        # pix_freq = np.unique(lv_seg[], return_counts=True)
+        if pap_percentile == 0:
+            percentile_val = 0
+        else:
+            percentile_val = pap_percentile + i * 2
+            if percentile_val < 0:
+                percentile_val = 0
+            elif percentile_val > 100:
+                percentile_val = 100
+
+        pix_percentile = np.percentile(lv_seg_1d, percentile_val)
+        lv_seg[lv_seg < pix_percentile] = 0
+        lv_seg[lv_seg != 0] = 55
+        nlabels, labels, stats, centroids = cv.connectedComponentsWithStats(lv_seg, None, None, None, 4, cv.CV_32S)
+        areas = stats[1:, cv.CC_STAT_AREA]
+        lv_seg[labels != (np.argmax(areas) + 1)] = 0
+
+        mask = SA_LV_mask_ED_temp[i].copy()
+        mask[mask == 60] = 5
+        mask = mask + lv_seg
+        mask[mask == 5] = 255
+        # cv2_imshow(img)
+        # cv2_imshow(mask)
+
+        mask_copy = mask.copy()
+        mask_copy[mask_copy == 255] = 0
+        mask_copy[mask_copy != 0] = 180
+        mask_processed = mask.copy()
+        mask_processed[mask_processed != 0] = 255
+        # cv2_imshow(mask_processed)
+        for j in range(ext_dilate):
+            mask_processed = cv.dilate(np.array(mask_processed), kernel=np.ones((3, 3), np.uint8), iterations=2)
+            mask_processed = cv.erode(np.array(mask_processed), kernel=np.ones((3, 3), np.uint8))
+            # cv2_imshow(mask_processed)
+            mask_processed = Image.fromarray(mask_processed)
+            mask_processed = np.array(mask_processed.filter(ImageFilter.ModeFilter(size=15)))
+
+            # cv2_imshow(mask_processed)
+            # cv2_imshow(mask_processed-mask_copy)
+
+        mask_processed[mask_processed != 0] = 180
+
+        final_mask = mask_processed - mask_copy
+        mask[mask == 255] = 75
+        final_mask = final_mask + mask
+        final_mask[final_mask == 174] = 120
+        final_mask[final_mask==119] = 120
+        SA_LV_mask_ED_full_myo.append(final_mask)
+
+        contoured_img = edge_detection(SA_img_ED[i].copy(), final_mask)
+        save_img(contoured_img, "K_contoured_img_" + str(string.ascii_lowercase[i]))
+
+    SA_LV_mask_ED_full_myo = np.array(SA_LV_mask_ED_full_myo)
+    # SA_LV_mask_ED = np.array(SA_LV_mask_ED_full).copy()
+    # SA_LV_mask_ED[SA_LV_mask_ED == 120] = 0
     save_dicom(SA_LV_mask_ED, path, "ef_seg_sa_ED.nii.gz")
+    save_dicom(SA_LV_mask_ED_full, path, "ef_seg_sa_ED_full.nii.gz")
+    save_dicom(SA_LV_mask_ED_full_myo, path, "ef_seg_sa_ED_full_myo.nii.gz")
     save_dicom(SA_img_ED, path, "ef_sa_ED.nii.gz")
-    save_gif(SA_LV_mask_ED, "sa_ed_seg_ef_gif/")
+    save_gif(SA_LV_mask_ED_full_myo, "sa_ed_seg_ef_gif/")
     save_gif(SA_img_ED, "sa_ed_ef_gif/")
-    return SA_LV_mask_ED, SA_img_ED, slice_locs_trimed
+    return SA_LV_mask_ED_full_myo, SA_LV_mask_ED, SA_img_ED, slice_locs_trimed
+
+# ed_seq_name = "sa_ED.tiff"
+# ed_seg_name = "seg_sa_ED.tiff"
+#
+# imgs_SA = io.imread('Segmentation/cMRI_1/' + ed_seq_name, as_gray=True)
+# imgs_SA_shape = np.shape(imgs_SA)
+# imgs_SA = np.transpose(np.array(imgs_SA), (1, 2, 0))
+#
+# masks_SA = io.imread('Segmentation/cMRI_1/' + ed_seg_name, as_gray=True)
+# masks_SA = np.transpose(np.array(masks_SA), (1, 2, 0))
+#
+# for i in range(imgs_SA_shape[0]):
+#     # Normalize bw 0 and 255, and convert to int
+#     img = cv.normalize(imgs_SA[:, :, i], None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_64F).astype(
+#         np.uint8)
+#     mask = cv.normalize(masks_SA[:, :, i], None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_64F).astype(
+#         np.uint8)
+#
+#     # Separate bw lv and my masks
+#     lv_mask = mask.copy()
+#     lv_mask[lv_mask == 255] = 0
+#     lv_mask[lv_mask == 60] = 255
+#
+#     myo_mask = mask.copy()
+#     myo_mask[myo_mask != 255] = 0
+#
+#     # Display actual seg
+#     lv_seg = cv.bitwise_and(img.copy(), img.copy(), mask=lv_mask)
+#     im = Image.fromarray(lv_seg)
+#     im.save("New folder (3)/seg"+str(i)+".png")
+#
+#     plt.imshow(lv_seg, cmap='gray')
+#     plt.axis('off')
+#     plt.show()
+#
+#     lv_seg_1d = lv_seg.flatten()
+#     lv_seg_1d = lv_seg_1d[lv_seg_1d != 0]
+#
+#     # pix_freq = np.unique(lv_seg[], return_counts=True)
+#     pix_percentile = np.percentile(lv_seg_1d, 25+i*2)
+#     lv_seg[lv_seg < pix_percentile] = 0
+#
+#     im = Image.fromarray(lv_seg)
+#     im.save("New folder (3)/seg_rec" + str(i) + ".png")
+#     plt.imshow(lv_seg, cmap='gray')
+#     plt.axis('off')
+#     plt.show()
