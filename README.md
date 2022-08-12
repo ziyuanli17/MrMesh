@@ -4,12 +4,12 @@
 ### Latest Release: [Here](https://github.com/ziyuanli17/MrMesh/releases/download/beta/MrMesh_win.zip)
 
 ## Features
-- Generate 2D pixelwise segmentations using [mUNet](https://jcmr-online.biomedcentral.com/articles/10.1186/s12968-018-0471-x) 
-- Process mUnet outliers using [EF](https://docs.google.com/document/d/15KwaYJncmZG8PiatVQ2rn-Fxw9KLR3YiaoLPZSIU4w4/edit?usp=sharing), a novel computer vision based approach to generate anatomically plausible segmentations
+- Generate 2D pixelwise segmentations (LV cavity, LV myocardium, and RV cavity) using [mUNet](https://jcmr-online.biomedcentral.com/articles/10.1186/s12968-018-0471-x) 
+- Process mUnet outliers using [EF](https://docs.google.com/document/d/15KwaYJncmZG8PiatVQ2rn-Fxw9KLR3YiaoLPZSIU4w4/edit?usp=sharing), a novel computer vision based approach to generate anatomically plausible segmentations (LV cavity, LV myocardium, RV cavity, RV myocardium, and LV trebeculation)
 - Extract endocardium and epicardium contours from the segmentations 
-- Generate 2D & 3D surface meshes, and 3D volume mesh
+- Generate 2D & 3D surface meshes, and 3D volume mesh of LV
 - Refine meshes to a desired grid resolution
-- Segmentation of RV cavity, RV myocardium, and LV trebeculation (latest release only)
+
 
 # User Instruction
 ## Preparations
