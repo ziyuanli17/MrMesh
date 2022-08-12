@@ -1,14 +1,15 @@
 # MrMesh: MRI to Mesh
 ## _Automatically generate cardiac segmentations, contours, and meshes from SAX MR images_
 [![Overview](https://drive.google.com/uc?export=view&id=1xK7LrTNp9QFfqOYjSPxX0U1QitpnuZ4Y)](https://drive.google.com/uc?export=view&id=1GEgoLsMAe0Ea-mp36cnNft__zp9MSVN)
-### Latest Release: [Here](https://github.com/ziyuanli17/MrMesh/releases/download/beta/MrMesh_win.zip) 
+### Latest Release: [Here](https://github.com/ziyuanli17/MrMesh/releases/download/beta/MrMesh_win.zip)
 
 ## Features
-- Generate 2D pixelwise segmentations (currently only support left ventricle) using [mUNet](https://jcmr-online.biomedcentral.com/articles/10.1186/s12968-018-0471-x) 
+- Generate 2D pixelwise segmentations using [mUNet](https://jcmr-online.biomedcentral.com/articles/10.1186/s12968-018-0471-x) 
 - Process mUnet outliers using [EF](https://docs.google.com/document/d/15KwaYJncmZG8PiatVQ2rn-Fxw9KLR3YiaoLPZSIU4w4/edit?usp=sharing), a novel computer vision based approach to generate anatomically plausible segmentations
 - Extract endocardium and epicardium contours from the segmentations 
 - Generate 2D & 3D surface meshes, and 3D volume mesh
 - Refine meshes to a desired grid resolution
+- Segmentation of RV cavity, RV myocardium, and LV trebeculation (latest release only)
 
 # User Instruction
 ## Preparations
